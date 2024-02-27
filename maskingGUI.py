@@ -14,7 +14,6 @@
 #    copy automatic_masking.py script to C:/Users/<username>/AppData/Local/Agisoft/Metashape Pro/scripts/
 # 2. Restart Metashape
 
-import numpy as np
 import Metashape
 from PySide2 import QtGui, QtCore, QtWidgets
 
@@ -38,6 +37,9 @@ if found_major_version != compatible_major_version:
 
 try:
     import cv2
+    import numpy as np
+    import scipy
+
 except ImportError:
     # install dependencies only if import fails to avoid network requests and repetive installations
     temporary_file = tempfile.NamedTemporaryFile(delete=False)
@@ -45,6 +47,8 @@ except ImportError:
     urllib.request.urlretrieve(find_links_file_url, temporary_file.name)
 
     pip_install("""-f {find_links_file_path}
+scipy == 1.12.0
+numpy == 1.26.3
 opencv-python == 4.9.0.80""".format(find_links_file_path=temporary_file.name.replace("\\", "\\\\")))
 
 
@@ -133,7 +137,7 @@ class EdgeMaskDlg(QtWidgets.QDialog):
         self.noisePixel = QtWidgets.QLabel()
         self.noisePixel.setText("Pixel separation for noise:")
         self.edtNoisePixel = QtWidgets.QLineEdit()
-        scale_ratio_tooltip = "Set the minimum distance between noise pixels. All unique pixels that are more distant to another pixel than this value will be masked. If set too high, noise will not be masked. "
+        scale_ratio_tooltip = "Set the minimum distance between noise pixels. All unique isolated pixels that are more distant to another pixel than this value will be masked. If set too high, noise will not be masked. "
         self.noisePixel.setToolTip(scale_ratio_tooltip)
         self.edtNoisePixel.setToolTip(scale_ratio_tooltip)
         noiseValidator = QtGui.QIntValidator()
@@ -183,7 +187,7 @@ class EdgeMaskDlg(QtWidgets.QDialog):
         self.noiseDil = QtWidgets.QLabel()
         self.noiseDil.setText("Noise Dilation:")
         self.edtNoiseDil = QtWidgets.QLineEdit()
-        scale_ratio_tooltip = 'Dilation filter iteration number. Can be used in conjuction with "Noise Erosion" to attempt to remove noise.'
+        scale_ratio_tooltip = 'Dilation filter iteration number. Can be used in conjunction with "Noise Erosion" to attempt to remove noise.'
         self.noiseDil.setToolTip(scale_ratio_tooltip)
         self.edtNoiseDil.setToolTip(scale_ratio_tooltip)
         noiseDilValidator = QtGui.QIntValidator()
@@ -193,7 +197,7 @@ class EdgeMaskDlg(QtWidgets.QDialog):
         self.noiseEro = QtWidgets.QLabel()
         self.noiseEro.setText("Noise Erosion:")
         self.edtNoiseEro = QtWidgets.QLineEdit()
-        scale_ratio_tooltip = 'Erosion filter iteration number Can be used in conjuction with "Noise Dilation" to attempt to remove noise.'
+        scale_ratio_tooltip = 'Erosion filter iteration number Can be used in conjunction with "Noise Dilation" to attempt to remove noise.'
         self.noiseEro.setToolTip(scale_ratio_tooltip)
         self.edtNoiseEro.setToolTip(scale_ratio_tooltip)
         noiseErosionValidator = QtGui.QIntValidator()
@@ -203,7 +207,7 @@ class EdgeMaskDlg(QtWidgets.QDialog):
         self.coaDil = QtWidgets.QLabel()
         self.coaDil.setText("Coalescing factor:")
         self.edtCoaDil = QtWidgets.QLineEdit()
-        scale_ratio_tooltip = 'Number of dilation and erodion filter iterations. This is typically use to bridge gaps between "mask islands".'
+        scale_ratio_tooltip = 'Number of dilation and erosion filter iterations. This is typically use to bridge gaps between "mask islands".'
         self.coaDil.setToolTip(scale_ratio_tooltip)
         self.edtCoaDil.setToolTip(scale_ratio_tooltip)
         coaDilValidator = QtGui.QIntValidator()
@@ -213,12 +217,26 @@ class EdgeMaskDlg(QtWidgets.QDialog):
         self.kernelSize = QtWidgets.QLabel()
         self.kernelSize.setText("Kernel size:")
         self.edtKernelSize = QtWidgets.QLineEdit()
-        scale_ratio_tooltip = "Kernel size for Coalesing pass. Default is 5 (a 5x5 kernel) "
+        scale_ratio_tooltip = "Kernel size for Coalescing pass. Default is 5 (a 5x5 kernel) "
         self.kernelSize.setToolTip(scale_ratio_tooltip)
         self.edtKernelSize.setToolTip(scale_ratio_tooltip)
         kernelSizeValidator = QtGui.QIntValidator()
         kernelSizeValidator.setBottom(0)
         self.edtKernelSize.setValidator(kernelSizeValidator)
+
+        cannyArgs = self.getCannyArgs()
+        pillowArgs = self.getPillowArgs()
+
+        self.edtNoisePixel.setPlaceholderText(str(pillowArgs['noisePixelSeperation']))
+        self.edtCoalesceFactor.setPlaceholderText(str(pillowArgs['coalesceFactor']))
+        self.edtThreshold.setPlaceholderText(str(pillowArgs['threshold']))
+        self.edtThreshold1.setPlaceholderText(str(cannyArgs['threshold1']))
+        self.edtThreshold2.setPlaceholderText(str(cannyArgs['threshold2']))
+        self.edtNoiseDil.setPlaceholderText(str(cannyArgs['noiseDilation']))
+        self.edtNoiseEro.setPlaceholderText(str(cannyArgs['noiseErosion']))
+        self.edtCoaDil.setPlaceholderText(str(cannyArgs['coalescingfactor']))
+        self.edtKernelSize.setPlaceholderText(str(cannyArgs['kernelsize']))
+
 
         # Set the image to the QLabel
         self.imageEdgeLabel = QtWidgets.QLabel()
