@@ -1,5 +1,18 @@
-# Automatically creates mask around areas with edged. Used GUI to help initial
-# settings.
+# This is python script for Metashape Pro.
+#
+# Based on https://github.com/agisoft-llc/metashape-scripts/blob/master/src/automatic_masking.py
+#
+# How to install (Linux):
+#
+# 1. Add this script to auto-launch - https://agisoft.freshdesk.com/support/solutions/articles/31000133123-how-to-run-python-script-automatically-on-metashape-professional-start
+#    copy automatic_masking.py script to /home/<username>/.local/share/Agisoft/Metashape Pro/scripts/
+# 2. Restart Metashape
+#
+# How to install (Windows):
+#
+# 1. Add this script to auto-launch - https://agisoft.freshdesk.com/support/solutions/articles/31000133123-how-to-run-python-script-automatically-on-metashape-professional-start
+#    copy automatic_masking.py script to C:/Users/<username>/AppData/Local/Agisoft/Metashape Pro/scripts/
+# 2. Restart Metashape
 
 import numpy as np
 import Metashape
@@ -207,14 +220,10 @@ class EdgeMaskDlg(QtWidgets.QDialog):
         kernelSizeValidator.setBottom(0)
         self.edtKernelSize.setValidator(kernelSizeValidator)
 
-        # Convert NumPy array to QImage
-
         # Set the image to the QLabel
         self.imageEdgeLabel = QtWidgets.QLabel()
         self.imageNoiseLabel = QtWidgets.QLabel()
         self.imageFinalLabel = QtWidgets.QLabel()
-        # self.overlayImageLabel = QtWidgets.QLabel()
-        # self.originalImageLabel = QtWidgets.QLabel()
 
         self.updateCameraLabels()
 
@@ -272,7 +281,7 @@ class EdgeMaskDlg(QtWidgets.QDialog):
         layout.addWidget(self.coalesceFactor, 1, 4)
         layout.addWidget(self.edtCoalesceFactor, 1, 5)
 
-        # CAnny widgets\
+        # CAnny widgets
 
         layout.addWidget(self.threshold1, 1, 0)
         layout.addWidget(self.edtThreshold1, 1, 1)
@@ -293,8 +302,6 @@ class EdgeMaskDlg(QtWidgets.QDialog):
         layout.addWidget(self.imageEdgeLabel, 3, 0, 1, 2)
         layout.addWidget(self.imageNoiseLabel, 3, 2, 1, 2)
         layout.addWidget(self.imageFinalLabel, 3, 4, 1, 2)
-        # layout.addWidget(self.overlayImageLabel, 4, 2, 1, 2)
-        # layout.addWidget(self.originalImageLabel, 4, 4, 1, 2)
 
         layout.addWidget(self.btnOk, 5, 0)
         layout.addWidget(self.btnTest, 5, 1)
