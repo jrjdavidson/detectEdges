@@ -11,7 +11,7 @@
 # How to install (Windows):
 #
 # 1. Add this script to auto-launch - https://agisoft.freshdesk.com/support/solutions/articles/31000133123-how-to-run-python-script-automatically-on-metashape-professional-start
-#    copy automatic_masking.py script to C:/Users/<username>/AppData/Local/Agisoft/Metashape Pro/scripts/
+#    copy maskingGUI.py script to C:/Users/<username>/AppData/Local/Agisoft/Metashape Pro/scripts/
 # 2. Restart Metashape
 
 import numpy as np
